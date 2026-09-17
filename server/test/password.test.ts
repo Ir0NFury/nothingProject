@@ -38,4 +38,25 @@ describe('password hashing', () => {
   it('returns false for params exceeding the scrypt maxmem', async () => {
     expect(await verifyPassword('anything', 'scrypt$1048576$8$1$c2FsdA==$aGFzaA==')).toBe(false)
   })
+
+  it('returns false for a genuine hash with N replaced by 0', async () => {
+    const password = 'correct horse battery'
+    const stored = await hashPassword(password)
+    const zeroN = stored.replace('scrypt$16384$', 'scrypt$0$')
+    expect(await verifyPassword(password, zeroN)).toBe(false)
+  })
+
+  it('returns false for a genuine hash with r replaced by 0', async () => {
+    const password = 'correct horse battery'
+    const stored = await hashPassword(password)
+    const zeroR = stored.replace('$16384$8$', '$16384$0$')
+    expect(await verifyPassword(password, zeroR)).toBe(false)
+  })
+
+  it('returns false for a genuine hash with p replaced by 0', async () => {
+    const password = 'correct horse battery'
+    const stored = await hashPassword(password)
+    const zeroP = stored.replace('$16384$8$1$', '$16384$8$0$')
+    expect(await verifyPassword(password, zeroP)).toBe(false)
+  })
 })

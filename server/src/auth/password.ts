@@ -20,6 +20,13 @@ export async function hashPassword(password: string): Promise<string> {
   return `scrypt$${N}$${r}$${p}$${salt.toString('base64')}$${key.toString('base64')}`
 }
 
+// A positive integer. Node's scrypt treats 0 as falsy and silently substitutes its own
+// default for that param (which happens to equal this app's PARAMS), so a stored hash with
+// a 0 must be rejected here up front — a try/catch around scrypt can't catch a non-throw.
+function isPositiveInt(value: number): boolean {
+  return Number.isInteger(value) && value > 0
+}
+
 export async function verifyPassword(password: string, stored: string): Promise<boolean> {
   const parts = stored.split('$')
   if (parts.length !== 6 || parts[0] !== 'scrypt') return false
@@ -28,12 +35,13 @@ export async function verifyPassword(password: string, stored: string): Promise<
   const expected = Buffer.from(hashB64, 'base64')
   // An empty hash would trivially match scrypt's 0-length output below.
   if (expected.length === 0) return false
+  if (!isPositiveInt(params.N) || !isPositiveInt(params.r) || !isPositiveInt(params.p)) return false
   let actual: Buffer
   try {
     actual = await scryptAsync(password, Buffer.from(saltB64, 'base64'), expected.length, params)
   } catch (err) {
-    // Node rejects non-numeric, non-integer or out-of-range scrypt params (e.g. a
-    // non-power-of-two N, or params over its memory limit) with a RangeError.
+    // A positive integer can still be a param scrypt itself rejects (e.g. a non-power-of-two
+    // N, or params over its memory limit) — Node reports those as a RangeError.
     if (err instanceof RangeError) return false
     throw err
   }
