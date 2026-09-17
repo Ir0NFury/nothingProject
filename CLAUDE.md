@@ -22,6 +22,7 @@ Full-stack app for preparing for technical interviews. It is also a learning pro
 - **Refresh token:** 7-day lifetime, kept in an `httpOnly`, `SameSite=Strict` cookie named `ip_refresh`, with path limited to `/api/auth`. `Secure` flag only in production. Use unique cookie names, because other localhost apps set `refreshToken` / `JSESSIONID`.
 - **Rotation:** every refresh issues a new refresh token and invalidates the old one. Refresh tokens are stored hashed in the DB. Reuse of an already-rotated token revokes that token family.
 - **Concurrency:** refresh and logout lock the user's row (`SELECT … FOR UPDATE`) before touching that user's tokens, so reuse revocation can't miss a token that a parallel refresh is inserting.
+- **Known trade-off:** if a refresh response is lost after the server rotated the token (tab closed or reloaded mid-request), the browser keeps the old cookie, the next refresh looks like reuse, and the user is logged out. A short reuse grace window could soften this later (not implemented).
 - **Rate limit:** login and register share a limit of 10 requests per 15 minutes per IP (off in tests). Set Express `trust proxy` when deploying behind a reverse proxy, or every client shares one limit.
 - **Client structure:** `api/client.ts` owns the access token (memory only) and the refresh logic; `auth/AuthProvider` owns the current user; components use `useAuth()` and never touch tokens.
 - **Roles:** `user` and `admin`, carried in the access token claims and checked server-side.
@@ -59,7 +60,8 @@ shared/              Types shared by client and server (added when needed)
 ## First-time setup
 ```bash
 cp server/.env.example server/.env
-# Edit server/.env: set JWT_ACCESS_SECRET (≥32 chars); without it the server exits and lists missing variables
+# Edit server/.env: set JWT_ACCESS_SECRET (≥32 chars) and ADMIN_EMAIL / ADMIN_PASSWORD before seeding;
+# without a valid server/.env the server exits and lists the missing or invalid variables
 npm run db:up
 npm run db:migrate -w @app/server
 npm run db:seed-admin -w @app/server

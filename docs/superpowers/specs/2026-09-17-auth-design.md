@@ -112,23 +112,23 @@ All auth routes live under `/api/auth`. JSON in, JSON out.
   - `secure: NODE_ENV === 'production'`
   - `path: '/api/auth'`
   - `maxAge`: 7 days
+- **Known trade-off:** if a refresh response is lost after the server rotated the token (tab closed or reloaded mid-request), the browser keeps the old cookie, the next refresh looks like reuse, and the user is logged out. A short reuse grace window could soften this later (not implemented).
 
 ### Login / register
 - On success, a new `family_id` is created, the first refresh token is inserted, and the response returns the access token and user.
 
 ### Refresh algorithm (`auth.service.ts → refresh(rawToken)`)
 1. No token, or no row matches its hash → `INVALID_REFRESH_TOKEN`.
-2. Row has `revoked_at` set → **reuse detected**: revoke every non-revoked token in `family_id`, log a warning, return `INVALID_REFRESH_TOKEN`.
-3. `expires_at` is in the past → `INVALID_REFRESH_TOKEN`.
-4. Otherwise, in a single transaction:
-   - Lock the row with `SELECT … FOR UPDATE`.
-   - Re-check that `revoked_at` is still null. If it is not, go to step 2.
-   - Insert the new token (same family, fresh 7-day expiry).
-   - Set `revoked_at = now()` and `replaced_by = new.id` on the old token.
-   - Load the user.
-   - Return `{ accessToken, user }` plus the new raw refresh token.
+2. Otherwise, in a single transaction:
+   - Lock the user's row first (`SELECT … FROM users … FOR UPDATE`) — refresh and logout both do this, so reuse revocation can't miss a token a parallel refresh is inserting.
+   - Lock the token row with `SELECT … FOR UPDATE`.
+   - Row has `revoked_at` set → **reuse detected**: revoke every non-revoked token in `family_id`. This revocation happens inside the same transaction, so it commits even though the request still ends in an error.
+   - `expires_at` is in the past → invalid.
+   - Otherwise: insert the new token (same family, fresh 7-day expiry), set `revoked_at = now()` and `replaced_by = new.id` on the old token, and load the user.
+3. Outside the transaction: reuse → log a warning and return `INVALID_REFRESH_TOKEN`; invalid → return `INVALID_REFRESH_TOKEN`; otherwise return `{ accessToken, user }` plus the new raw refresh token.
 
 ### Logout
+- Takes the same user-row lock as refresh before touching tokens.
 - If a cookie is present and matches a row, revoke all tokens in that family.
 - Always clear the cookie and return 204.
 
