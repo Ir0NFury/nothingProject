@@ -28,6 +28,8 @@ export async function logout(): Promise<void> {
   try {
     await apiFetch<void>('/api/auth/logout', { method: 'POST' })
   } finally {
+    // Clear the in-memory token even if the server call failed — the next
+    // API call will just refresh from the cookie if the session is still alive.
     setAccessToken(null)
   }
 }

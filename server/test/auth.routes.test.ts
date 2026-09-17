@@ -35,6 +35,8 @@ describe('POST /api/auth/register', () => {
     expect(setCookie).toContain('HttpOnly')
     expect(setCookie).toContain('SameSite=Strict')
     expect(setCookie).toContain('Path=/api/auth')
+    // The response body carries an access token, so it must never be cached.
+    expect(res.headers['cache-control']).toBe('no-store')
   })
 
   it('returns 409 for an existing email', async () => {

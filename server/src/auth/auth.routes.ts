@@ -20,6 +20,7 @@ function sendSession(res: Response, status: number, result: authService.AuthResu
     ...refreshCookieOptions,
     maxAge: REFRESH_TOKEN_TTL_MS,
   })
+  res.set('Cache-Control', 'no-store') // this response carries tokens
   res.status(status).json({ accessToken: result.accessToken, user: result.user })
 }
 

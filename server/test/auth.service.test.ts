@@ -17,10 +17,11 @@ afterEach(() => {
 
 // Polls pg_stat_activity until some backend is blocked on a lock — i.e. our
 // "victim" refresh() call is stuck behind the user-row lock this test is
-// holding open — or fails after ~5s if that never happens.
+// holding open — or fails after ~2s if that never happens (well under
+// Vitest's 5s test timeout, so this error message is the one that surfaces).
 async function waitForLockWait() {
   const start = Date.now()
-  while (Date.now() - start < 5000) {
+  while (Date.now() - start < 2000) {
     const { rows } = await pool.query<{ n: number }>(
       `select count(*)::int as n from pg_stat_activity where datname = current_database() and wait_event_type = 'Lock'`,
     )

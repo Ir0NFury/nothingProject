@@ -88,6 +88,8 @@ function invalidRefreshToken() {
 // for this user then runs one at a time while the lock is held, so a reuse
 // check can't miss a token that a parallel rotation is still inserting
 // (a per-token lock can't do this: the new token doesn't exist yet to lock).
+// This relies on Postgres's default READ COMMITTED isolation, where each
+// statement sees rows committed while we waited for the lock.
 async function lockUser(tx: Tx, userId: string) {
   await tx.select({ id: users.id }).from(users).where(eq(users.id, userId)).for('update')
 }
@@ -117,8 +119,9 @@ export async function refresh(rawToken: string | undefined): Promise<AuthResult>
   const outcome = await db.transaction(async (tx) => {
     await lockUser(tx, owner.userId)
 
-    // FOR UPDATE locks the row until the transaction ends, so two concurrent
-    // refreshes with the same token run one after another, not in parallel.
+    // The user lock above already serializes every refresh/logout for this
+    // user, so two concurrent refreshes with the same token can't race here.
+    // FOR UPDATE additionally guards this specific row until the transaction ends.
     const [row] = await tx
       .select()
       .from(refreshTokens)
