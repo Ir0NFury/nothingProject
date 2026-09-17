@@ -2,6 +2,22 @@ import type { ErrorRequestHandler } from 'express'
 import { z, ZodError } from 'zod'
 import { AppError } from '../lib/errors.js'
 
+// express.json() reports client mistakes (malformed JSON, oversized body, bad
+// encoding, aborted request, ...) as plain objects with a `type` and a 4xx `status`,
+// not as one specific error class.
+function isBodyParserError(err: unknown): err is { type: string; status: number } {
+  return (
+    typeof err === 'object' &&
+    err !== null &&
+    'type' in err &&
+    typeof err.type === 'string' &&
+    'status' in err &&
+    typeof err.status === 'number' &&
+    err.status >= 400 &&
+    err.status < 500
+  )
+}
+
 // Express recognizes error handlers by their 4 parameters, so `_next` must stay.
 export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   if (err instanceof AppError) {
@@ -18,9 +34,9 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
     })
     return
   }
-  // express.json() reports malformed JSON as a 400 with this type.
-  if (typeof err === 'object' && err !== null && 'type' in err && err.type === 'entity.parse.failed') {
-    res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'Malformed JSON body' } })
+  if (isBodyParserError(err)) {
+    const message = err.type === 'entity.parse.failed' ? 'Malformed JSON body' : 'Invalid request body'
+    res.status(err.status).json({ error: { code: 'VALIDATION_ERROR', message } })
     return
   }
   console.error(err)

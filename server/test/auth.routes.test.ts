@@ -53,6 +53,15 @@ describe('POST /api/auth/register', () => {
     expect(res.status).toBe(400)
     expect(res.body.error.code).toBe('VALIDATION_ERROR')
   })
+
+  it('returns 413 for an oversized JSON body', async () => {
+    const res = await request(app)
+      .post('/api/auth/register')
+      .send({ email: 'a@example.com', password: 'x'.repeat(200_000) })
+
+    expect(res.status).toBe(413)
+    expect(res.body.error.code).toBe('VALIDATION_ERROR')
+  })
 })
 
 describe('POST /api/auth/login', () => {
