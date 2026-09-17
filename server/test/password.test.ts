@@ -22,4 +22,12 @@ describe('password hashing', () => {
   it('returns false for a malformed stored hash', async () => {
     expect(await verifyPassword('anything', 'not-a-hash')).toBe(false)
   })
+
+  it('returns false for a structurally-valid hash with invalid params', async () => {
+    expect(await verifyPassword('anything', 'scrypt$abc$8$1$c2FsdA==$aGFzaA==')).toBe(false)
+  })
+
+  it('returns false for a structurally-valid hash with an empty hash segment', async () => {
+    expect(await verifyPassword('anything', 'scrypt$16384$8$1$c2FsdA==$')).toBe(false)
+  })
 })
