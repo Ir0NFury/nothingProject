@@ -1,0 +1,19 @@
+{
+  "name": "interview-prep",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently -n server,client -c blue,magenta \"npm run dev -w @app/server\" \"npm run dev -w @app/client\"",
+    "build": "npm run build --workspaces",
+    "typecheck": "npm run typecheck -w @app/server && tsc -b client"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5"
+  }
+}

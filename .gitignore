@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+coverage/
+
+# Env files (secrets)
+.env
+.env.*
+!.env.example
+
+# Claude Code personal settings
+.claude/settings.local.json
+
+# IDE / OS
+.idea/
+.junie/
+.DS_Store
+
+# Logs
+*.log
