@@ -13,14 +13,17 @@ Full-stack app for preparing for technical interviews. It is also a learning pro
 - **client/:** React + TypeScript + Vite
 - **server/:** Node.js + TypeScript + Express
 - **Database:** PostgreSQL, run locally in Docker
+- **ORM:** Drizzle (drizzle-orm + drizzle-kit, pg driver). Migrations in server/drizzle/, committed.
 - **Auth:** JWT access token + refresh token (details below)
-- **Undecided:** ORM (Prisma or Drizzle), UI library, hosting
+- **Undecided:** UI library, hosting
 
 ## Auth design (decided)
-- **Access token:** short-lived JWT (~15 min), sent as an `Authorization: Bearer` header. The client keeps it in memory only, never in localStorage.
-- **Refresh token:** long-lived (~7–30 days), kept in an `httpOnly`, `Secure`, `SameSite` cookie named `ip_refresh`, with path limited to `/api/auth`. Use unique cookie names, because other localhost apps set `refreshToken` / `JSESSIONID`.
+- **Access token:** short-lived JWT (15 min), HS256, claims `sub`, `role`, `iat`, `exp`. Sent as `Authorization: Bearer` header; client keeps it in memory only, never in localStorage.
+- **Refresh token:** 7-day lifetime, kept in an `httpOnly`, `SameSite=Strict` cookie named `ip_refresh`, with path limited to `/api/auth`. `Secure` flag only in production. Use unique cookie names, because other localhost apps set `refreshToken` / `JSESSIONID`.
 - **Rotation:** every refresh issues a new refresh token and invalidates the old one. Refresh tokens are stored hashed in the DB. Reuse of an already-rotated token revokes that token family.
-- **Client:** the API client catches a 401, runs a single shared refresh call (even when several requests fail at once), then retries.
+- **Concurrency:** refresh and logout lock the user's row (`SELECT … FOR UPDATE`) before touching that user's tokens, so reuse revocation can't miss a token that a parallel refresh is inserting.
+- **Rate limit:** login and register share a limit of 10 requests per 15 minutes per IP (off in tests). Set Express `trust proxy` when deploying behind a reverse proxy, or every client shares one limit.
+- **Client structure:** `api/client.ts` owns the access token (memory only) and the refresh logic; `auth/AuthProvider` owns the current user; components use `useAuth()` and never touch tokens.
 - **Roles:** `user` and `admin`, carried in the access token claims and checked server-side.
 
 ## MVP scope
@@ -28,26 +31,45 @@ Full-stack app for preparing for technical interviews. It is also a learning pro
 2. **Admin panel:** `/admin` in the same React app, restricted to users with the `admin` role. Create and edit categories, questions, answers and code examples.
 3. **Auth:** register, login, and roles (`user`, `admin`).
 
-**Later:** AI features (question generation, answer grading, mock interviewer, RAG), tests, and deploy with CI/CD.
+**Later:** AI features (question generation, answer grading, mock interviewer, RAG), more tests, and deploy with CI/CD.
 
-## Structure (planned)
+## Structure
 ```
-client/   React app
-server/   Express API
-shared/   Types shared by client and server (added when needed)
+client/              React app (src/api, src/auth, src/components, src/pages)
+server/              Express API (src/auth, src/admin, src/db, src/lib, src/middleware)
+server/drizzle/      SQL migrations (generated, committed)
+server/test/         Vitest + Supertest tests (use the interview_prep_test DB)
+docker-compose.yml   Postgres 17 on host port 5433
+docs/                Specs and plans
+shared/              Types shared by client and server (added when needed)
 ```
 
 ## Commands (run from repo root)
-- `npm run dev`: starts server (tsx watch) and client (Vite) together
+- `npm run dev`: starts server (tsx watch) and client (Vite) together. Requires `server/.env`.
 - `npm run build`: builds both workspaces
 - `npm run typecheck`: runs tsc for server and client
 - `npm run lint -w @app/client`: oxlint
+- `npm run test`: server + client tests (server tests need `db:up`)
+- `npm run db:up` / `npm run db:down`: start/stop Postgres (Docker, host port 5433)
+- `npm run db:generate -w @app/server`: generate a migration from `src/db/schema.ts`
+- `npm run db:migrate -w @app/server`: apply migrations to the dev DB
+- `npm run db:seed-admin -w @app/server`: create/update the admin from `ADMIN_EMAIL`/`ADMIN_PASSWORD`
 - Run a command in one workspace: `npm run <script> -w @app/server` (or `@app/client`)
+
+## First-time setup
+```bash
+cp server/.env.example server/.env
+# Edit server/.env: set JWT_ACCESS_SECRET (≥32 chars)
+npm run db:up
+npm run db:migrate -w @app/server
+npm run db:seed-admin -w @app/server
+npm run dev
+```
 
 ## Local ports
 - Client (Vite): 5173. It proxies `/api/*` to the server.
 - Server (Express): 4000 (override with `PORT`)
-- Ports 3000 and 5432 are already taken on the dev machine by other Docker containers. Use a different host port for Postgres (e.g. 5433).
+- Postgres: 5433 (host port; container port 5432)
 
 ## Conventions
 - TypeScript everywhere, `strict` mode.
