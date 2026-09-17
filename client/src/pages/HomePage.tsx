@@ -5,6 +5,12 @@ type State = { status: 'loading' } | { status: 'error'; message: string } | { st
 
 export function HomePage() {
   const [state, setState] = useState<State>({ status: 'loading' })
+  const [attempt, setAttempt] = useState(0)
+
+  function retry() {
+    setState({ status: 'loading' })
+    setAttempt((n) => n + 1)
+  }
 
   useEffect(() => {
     const controller = new AbortController()
@@ -15,13 +21,18 @@ export function HomePage() {
         setState({ status: 'error', message: err instanceof Error ? err.message : 'Unknown error' })
       })
     return () => controller.abort()
-  }, [])
+  }, [attempt])
 
   return (
     <section>
       <h1>Interview Prep</h1>
       {state.status === 'loading' && <p role="status">Loading…</p>}
-      {state.status === 'error' && <p role="alert">Server unavailable: {state.message}</p>}
+      {state.status === 'error' && (
+        <div role="alert">
+          <p>Server unavailable: {state.message}</p>
+          <button type="button" onClick={retry}>Retry</button>
+        </div>
+      )}
       {state.status === 'ready' && <p>Message from server: {state.data}</p>}
     </section>
   )

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { pingAdmin } from '../../api/admin'
 
 type State = { status: 'loading' } | { status: 'error'; message: string } | { status: 'ready'; data: boolean }
@@ -6,11 +6,14 @@ type State = { status: 'loading' } | { status: 'error'; message: string } | { st
 export function AdminPage() {
   const [state, setState] = useState<State>({ status: 'loading' })
   const [attempt, setAttempt] = useState(0)
-  const retry = useCallback(() => setAttempt((n) => n + 1), [])
+
+  function retry() {
+    setState({ status: 'loading' })
+    setAttempt((n) => n + 1)
+  }
 
   useEffect(() => {
     const controller = new AbortController()
-    setState({ status: 'loading' })
     pingAdmin(controller.signal)
       .then(({ ok }) => setState({ status: 'ready', data: ok }))
       .catch((err: unknown) => {

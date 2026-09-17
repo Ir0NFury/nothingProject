@@ -36,12 +36,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setState({ user, status: 'authed' })
   }, [])
 
+  // If the server call fails, the refresh cookie may still be valid, so we stay
+  // logged in here and let the caller (Layout) report the failure to the user.
   const logout = useCallback(async () => {
-    try {
-      await authApi.logout()
-    } finally {
-      setState(GUEST)
-    }
+    await authApi.logout()
+    setState(GUEST)
   }, [])
 
   const value = useMemo<AuthContextValue>(

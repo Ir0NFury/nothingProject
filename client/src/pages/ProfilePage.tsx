@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { getMe } from '../api/auth'
 import type { User } from '../api/types'
 
@@ -7,11 +7,14 @@ type State = { status: 'loading' } | { status: 'error'; message: string } | { st
 export function ProfilePage() {
   const [state, setState] = useState<State>({ status: 'loading' })
   const [attempt, setAttempt] = useState(0)
-  const retry = useCallback(() => setAttempt((n) => n + 1), [])
+
+  function retry() {
+    setState({ status: 'loading' })
+    setAttempt((n) => n + 1)
+  }
 
   useEffect(() => {
     const controller = new AbortController()
-    setState({ status: 'loading' })
     getMe(controller.signal)
       .then((data) => setState({ status: 'ready', data }))
       .catch((err: unknown) => {
