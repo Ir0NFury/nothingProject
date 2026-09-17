@@ -84,8 +84,16 @@ function invalidRefreshToken() {
   return new AppError(401, 'INVALID_REFRESH_TOKEN', 'Session expired, please log in again')
 }
 
-async function revokeFamily(familyId: string) {
-  await db
+// Locks the user's row for the rest of the transaction. Every refresh/logout
+// for this user then runs one at a time while the lock is held, so a reuse
+// check can't miss a token that a parallel rotation is still inserting
+// (a per-token lock can't do this: the new token doesn't exist yet to lock).
+async function lockUser(tx: Tx, userId: string) {
+  await tx.select({ id: users.id }).from(users).where(eq(users.id, userId)).for('update')
+}
+
+async function revokeFamily(executor: Db | Tx, familyId: string) {
+  await executor
     .update(refreshTokens)
     .set({ revokedAt: new Date() })
     .where(and(eq(refreshTokens.familyId, familyId), isNull(refreshTokens.revokedAt)))
@@ -98,7 +106,17 @@ export async function refresh(rawToken: string | undefined): Promise<AuthResult>
   if (!rawToken) throw invalidRefreshToken()
   const tokenHash = hashRefreshToken(rawToken)
 
+  // A token's owner never changes, so this lookup needs no lock. It just
+  // tells us which user to lock before we touch the token row itself.
+  const [owner] = await db
+    .select({ userId: refreshTokens.userId })
+    .from(refreshTokens)
+    .where(eq(refreshTokens.tokenHash, tokenHash))
+  if (!owner) throw invalidRefreshToken()
+
   const outcome = await db.transaction(async (tx) => {
+    await lockUser(tx, owner.userId)
+
     // FOR UPDATE locks the row until the transaction ends, so two concurrent
     // refreshes with the same token run one after another, not in parallel.
     const [row] = await tx
@@ -108,7 +126,10 @@ export async function refresh(rawToken: string | undefined): Promise<AuthResult>
       .for('update')
 
     if (!row) return { kind: 'invalid' } as const
-    if (row.revokedAt) return { kind: 'reused', familyId: row.familyId } as const
+    if (row.revokedAt) {
+      await revokeFamily(tx, row.familyId)
+      return { kind: 'reused', familyId: row.familyId } as const
+    }
     if (row.expiresAt <= new Date()) return { kind: 'invalid' } as const
 
     const next = await insertRefreshToken(tx, row.userId, row.familyId)
@@ -121,8 +142,8 @@ export async function refresh(rawToken: string | undefined): Promise<AuthResult>
   })
 
   if (outcome.kind === 'reused') {
-    // Done after the transaction: throwing inside it would roll this back.
-    await revokeFamily(outcome.familyId)
+    // The transaction returned instead of throwing, so its revocation above
+    // commits; only the warning and the error happen out here.
     console.warn(`Refresh token reuse detected, revoked family ${outcome.familyId}`)
     throw invalidRefreshToken()
   }
@@ -136,8 +157,12 @@ export async function refresh(rawToken: string | undefined): Promise<AuthResult>
 export async function logout(rawToken: string | undefined): Promise<void> {
   if (!rawToken) return
   const [row] = await db
-    .select({ familyId: refreshTokens.familyId })
+    .select({ userId: refreshTokens.userId, familyId: refreshTokens.familyId })
     .from(refreshTokens)
     .where(eq(refreshTokens.tokenHash, hashRefreshToken(rawToken)))
-  if (row) await revokeFamily(row.familyId)
+  if (!row) return
+  await db.transaction(async (tx) => {
+    await lockUser(tx, row.userId)
+    await revokeFamily(tx, row.familyId)
+  })
 }
