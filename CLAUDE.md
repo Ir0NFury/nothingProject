@@ -45,7 +45,7 @@ shared/              Types shared by client and server (added when needed)
 ```
 
 ## Commands (run from repo root)
-- `npm run dev`: starts server (tsx watch) and client (Vite) together. Requires `server/.env`.
+- `npm run dev`: starts server (tsx watch) and client (Vite) together. Requires `server/.env`; without it the server exits and lists the missing or invalid variables.
 - `npm run build`: builds both workspaces
 - `npm run typecheck`: runs tsc for server and client
 - `npm run lint -w @app/client`: oxlint
@@ -59,7 +59,7 @@ shared/              Types shared by client and server (added when needed)
 ## First-time setup
 ```bash
 cp server/.env.example server/.env
-# Edit server/.env: set JWT_ACCESS_SECRET (≥32 chars)
+# Edit server/.env: set JWT_ACCESS_SECRET (≥32 chars); without it the server exits and lists missing variables
 npm run db:up
 npm run db:migrate -w @app/server
 npm run db:seed-admin -w @app/server
@@ -69,7 +69,7 @@ npm run dev
 ## Local ports
 - Client (Vite): 5173. It proxies `/api/*` to the server.
 - Server (Express): 4000 (override with `PORT`)
-- Postgres: 5433 (host port; container port 5432)
+- Postgres: 5433 (host port; container port 5432). Ports 3000 and 5432 are already taken on the dev machine by other Docker containers.
 
 ## Conventions
 - TypeScript everywhere, `strict` mode.
