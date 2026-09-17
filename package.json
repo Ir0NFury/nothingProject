@@ -8,7 +8,10 @@
   "scripts": {
     "dev": "concurrently -n server,client -c blue,magenta \"npm run dev -w @app/server\" \"npm run dev -w @app/client\"",
     "build": "npm run build --workspaces",
-    "typecheck": "npm run typecheck -w @app/server && tsc -b client"
+    "typecheck": "npm run typecheck -w @app/server && tsc -b client",
+    "db:up": "docker compose up -d --wait",
+    "db:down": "docker compose down",
+    "test": "npm run test -w @app/server && npm run test -w @app/client"
   },
   "engines": {
     "node": ">=24"
