@@ -1,26 +1,39 @@
-import { useEffect, useState } from 'react'
-
-type HelloResponse = { message: string }
+import { Route, Routes } from 'react-router'
+import { RequireAuth } from './auth/RequireAuth'
+import { Layout } from './components/Layout'
+import { AdminPage } from './pages/admin/AdminPage'
+import { HomePage } from './pages/HomePage'
+import { LoginPage } from './pages/LoginPage'
+import { NotFoundPage } from './pages/NotFoundPage'
+import { ProfilePage } from './pages/ProfilePage'
+import { RegisterPage } from './pages/RegisterPage'
 
 function App() {
-  const [message, setMessage] = useState<string>('Loading...')
-
-  useEffect(() => {
-    // "/api" is proxied to the Express server by Vite (see vite.config.ts)
-    fetch('/api/hello')
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        return res.json() as Promise<HelloResponse>
-      })
-      .then((data) => setMessage(data.message))
-      .catch((err: Error) => setMessage(`Server unavailable: ${err.message}`))
-  }, [])
-
   return (
-    <main>
-      <h1>Interview Prep</h1>
-      <p>Message from server: {message}</p>
-    </main>
+    <Routes>
+      <Route element={<Layout />}>
+        <Route index element={<HomePage />} />
+        <Route path="login" element={<LoginPage />} />
+        <Route path="register" element={<RegisterPage />} />
+        <Route
+          path="profile"
+          element={
+            <RequireAuth>
+              <ProfilePage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="admin"
+          element={
+            <RequireAuth roles={['admin']}>
+              <AdminPage />
+            </RequireAuth>
+          }
+        />
+        <Route path="*" element={<NotFoundPage />} />
+      </Route>
+    </Routes>
   )
 }
 

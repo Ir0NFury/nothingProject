@@ -7,3 +7,48 @@ body {
   margin: 0;
   padding: 2rem;
 }
+
+.site-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.site-header nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+}
+
+.brand {
+  font-weight: 700;
+}
+
+.site-header a.active {
+  font-weight: 600;
+}
+
+.user-email {
+  opacity: 0.7;
+}
+
+.form {
+  display: grid;
+  gap: 1rem;
+  max-width: 22rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.field-error,
+.form-error {
+  margin: 0;
+  color: #c62828;
+}
