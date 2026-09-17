@@ -4,14 +4,14 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch --env-file=.env src/index.ts",
+    "dev": "tsx watch --env-file-if-exists=.env src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:seed-admin": "tsx --env-file=.env src/db/seed-admin.ts"
+    "db:seed-admin": "tsx --env-file-if-exists=.env src/db/seed-admin.ts"
   },
   "dependencies": {
     "cookie-parser": "^1.4.7",
