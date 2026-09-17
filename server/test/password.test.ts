@@ -30,4 +30,12 @@ describe('password hashing', () => {
   it('returns false for a structurally-valid hash with an empty hash segment', async () => {
     expect(await verifyPassword('anything', 'scrypt$16384$8$1$c2FsdA==$')).toBe(false)
   })
+
+  it('returns false for a non-power-of-two N', async () => {
+    expect(await verifyPassword('anything', 'scrypt$3$8$1$c2FsdA==$aGFzaA==')).toBe(false)
+  })
+
+  it('returns false for params exceeding the scrypt maxmem', async () => {
+    expect(await verifyPassword('anything', 'scrypt$1048576$8$1$c2FsdA==$aGFzaA==')).toBe(false)
+  })
 })

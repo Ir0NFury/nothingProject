@@ -20,22 +20,23 @@ export async function hashPassword(password: string): Promise<string> {
   return `scrypt$${N}$${r}$${p}$${salt.toString('base64')}$${key.toString('base64')}`
 }
 
-// A positive integer, so a corrupted param string (e.g. "abc" or "-1") is rejected
-// instead of reaching scrypt, which throws on invalid options.
-function isPositiveInt(value: number): boolean {
-  return Number.isInteger(value) && value > 0
-}
-
 export async function verifyPassword(password: string, stored: string): Promise<boolean> {
   const parts = stored.split('$')
   if (parts.length !== 6 || parts[0] !== 'scrypt') return false
   const [, N, r, p, saltB64, hashB64] = parts
   const params = { N: Number(N), r: Number(r), p: Number(p) }
   const expected = Buffer.from(hashB64, 'base64')
-  if (!isPositiveInt(params.N) || !isPositiveInt(params.r) || !isPositiveInt(params.p) || expected.length === 0) {
-    return false
+  // An empty hash would trivially match scrypt's 0-length output below.
+  if (expected.length === 0) return false
+  let actual: Buffer
+  try {
+    actual = await scryptAsync(password, Buffer.from(saltB64, 'base64'), expected.length, params)
+  } catch (err) {
+    // Node rejects non-numeric, non-integer or out-of-range scrypt params (e.g. a
+    // non-power-of-two N, or params over its memory limit) with a RangeError.
+    if (err instanceof RangeError) return false
+    throw err
   }
-  const actual = await scryptAsync(password, Buffer.from(saltB64, 'base64'), expected.length, params)
   // Constant-time comparison, so timing doesn't leak how many bytes matched.
   return timingSafeEqual(actual, expected)
 }
