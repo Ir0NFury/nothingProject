@@ -1,5 +1,7 @@
 import cookieParser from 'cookie-parser'
 import express from 'express'
+import helmet from 'helmet'
+import { adminRouter } from './admin/admin.routes.js'
 import { authRouter } from './auth/auth.routes.js'
 import { AppError } from './lib/errors.js'
 import { errorHandler } from './middleware/errorHandler.js'
@@ -8,6 +10,7 @@ import { errorHandler } from './middleware/errorHandler.js'
 // so tests can import it without opening a real port.
 export const app = express()
 
+app.use(helmet())
 app.use(express.json())
 app.use(cookieParser())
 
@@ -20,6 +23,7 @@ app.get('/api/health', (_req, res) => {
 })
 
 app.use('/api/auth', authRouter)
+app.use('/api/admin', adminRouter)
 
 // Any other /api path is a 404 in the standard error format.
 app.use('/api', () => {
