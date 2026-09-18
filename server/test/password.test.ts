@@ -1,0 +1,62 @@
+import { describe, expect, it } from 'vitest'
+import { hashPassword, verifyPassword } from '../src/auth/password.js'
+
+describe('password hashing', () => {
+  it('verifies the correct password', async () => {
+    const stored = await hashPassword('correct horse battery')
+    expect(stored.startsWith('scrypt$16384$8$1$')).toBe(true)
+    expect(await verifyPassword('correct horse battery', stored)).toBe(true)
+  })
+
+  it('rejects a wrong password', async () => {
+    const stored = await hashPassword('correct horse battery')
+    expect(await verifyPassword('wrong password', stored)).toBe(false)
+  })
+
+  it('produces different hashes for the same password', async () => {
+    const a = await hashPassword('same password')
+    const b = await hashPassword('same password')
+    expect(a).not.toBe(b)
+  })
+
+  it('returns false for a malformed stored hash', async () => {
+    expect(await verifyPassword('anything', 'not-a-hash')).toBe(false)
+  })
+
+  it('returns false for a structurally-valid hash with invalid params', async () => {
+    expect(await verifyPassword('anything', 'scrypt$abc$8$1$c2FsdA==$aGFzaA==')).toBe(false)
+  })
+
+  it('returns false for a structurally-valid hash with an empty hash segment', async () => {
+    expect(await verifyPassword('anything', 'scrypt$16384$8$1$c2FsdA==$')).toBe(false)
+  })
+
+  it('returns false for a non-power-of-two N', async () => {
+    expect(await verifyPassword('anything', 'scrypt$3$8$1$c2FsdA==$aGFzaA==')).toBe(false)
+  })
+
+  it('returns false for params exceeding the scrypt maxmem', async () => {
+    expect(await verifyPassword('anything', 'scrypt$1048576$8$1$c2FsdA==$aGFzaA==')).toBe(false)
+  })
+
+  it('returns false for a genuine hash with N replaced by 0', async () => {
+    const password = 'correct horse battery'
+    const stored = await hashPassword(password)
+    const zeroN = stored.replace('scrypt$16384$', 'scrypt$0$')
+    expect(await verifyPassword(password, zeroN)).toBe(false)
+  })
+
+  it('returns false for a genuine hash with r replaced by 0', async () => {
+    const password = 'correct horse battery'
+    const stored = await hashPassword(password)
+    const zeroR = stored.replace('$16384$8$', '$16384$0$')
+    expect(await verifyPassword(password, zeroR)).toBe(false)
+  })
+
+  it('returns false for a genuine hash with p replaced by 0', async () => {
+    const password = 'correct horse battery'
+    const stored = await hashPassword(password)
+    const zeroP = stored.replace('$16384$8$1$', '$16384$8$0$')
+    expect(await verifyPassword(password, zeroP)).toBe(false)
+  })
+})
