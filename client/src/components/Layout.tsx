@@ -3,6 +3,8 @@ import { Link, NavLink, Outlet, useNavigate } from 'react-router'
 import { useAuth } from '../auth/useAuth'
 
 const navLink = 'hover:underline aria-[current=page]:font-semibold'
+// One width for the whole app shell. Long prose (answers) caps itself separately.
+const shell = 'mx-auto w-full max-w-6xl px-6'
 
 export function Layout() {
   const { user, status, logout } = useAuth()
@@ -23,7 +25,7 @@ export function Layout() {
 
   return (
     <>
-      <header className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-4 px-6 py-6">
+      <header className={`${shell} flex flex-wrap items-center justify-between gap-4 py-6`}>
         <Link to="/" className="text-lg font-bold">
           Interview Prep
         </Link>
@@ -66,7 +68,7 @@ export function Layout() {
           </p>
         )}
       </header>
-      <main className="mx-auto max-w-3xl px-6 pb-16">
+      <main className={`${shell} pb-16`}>
         <Outlet />
       </main>
     </>
