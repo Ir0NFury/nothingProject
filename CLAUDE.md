@@ -15,7 +15,8 @@ Full-stack app for preparing for technical interviews. It is also a learning pro
 - **Database:** PostgreSQL, run locally in Docker
 - **ORM:** Drizzle (drizzle-orm + drizzle-kit, pg driver). Migrations in server/drizzle/, committed.
 - **Auth:** JWT access token + refresh token (details below)
-- **Undecided:** UI library, hosting
+- **Styling:** Tailwind CSS v4 via `@tailwindcss/vite`. No config file: the import and base styles live in `client/src/index.css`.
+- **Undecided:** component library (e.g. shadcn/ui), hosting
 
 ## Auth design (decided)
 - **Access token:** short-lived JWT (15 min), HS256, claims `sub`, `role`, `iat`, `exp`. Sent as `Authorization: Bearer` header; client keeps it in memory only, never in localStorage.

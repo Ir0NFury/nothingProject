@@ -50,15 +50,21 @@ export function CredentialsForm({ submitLabel, passwordAutoComplete, onSubmit }:
   ]
 
   return (
-    <form className="form" onSubmit={handleSubmit} noValidate>
-      {formError && <p role="alert" className="form-error">{formError}</p>}
+    <form className="grid max-w-sm gap-4" onSubmit={handleSubmit} noValidate>
+      {formError && (
+        <p role="alert" className="text-sm text-red-700 dark:text-red-400">
+          {formError}
+        </p>
+      )}
       {fields.map(({ name, label, type, autoComplete }) => {
         const inputId = `${id}-${name}`
         const errorId = `${inputId}-error`
         const error = fieldErrors[name]
         return (
-          <div className="field" key={name}>
-            <label htmlFor={inputId}>{label}</label>
+          <div className="grid gap-1" key={name}>
+            <label htmlFor={inputId} className="text-sm font-medium">
+              {label}
+            </label>
             <input
               id={inputId}
               name={name}
@@ -68,12 +74,21 @@ export function CredentialsForm({ submitLabel, passwordAutoComplete, onSubmit }:
               onChange={(e) => update(name, e.target.value)}
               aria-invalid={error ? true : undefined}
               aria-describedby={error ? errorId : undefined}
+              className="rounded-md border border-neutral-300 px-3 py-2 focus:border-neutral-500 focus:outline-none aria-[invalid=true]:border-red-600 dark:border-neutral-700 dark:bg-neutral-900"
             />
-            {error && <p id={errorId} className="field-error">{error}</p>}
+            {error && (
+              <p id={errorId} className="text-sm text-red-700 dark:text-red-400">
+                {error}
+              </p>
+            )}
           </div>
         )
       })}
-      <button type="submit" disabled={submitting}>
+      <button
+        type="submit"
+        disabled={submitting}
+        className="justify-self-start rounded-md bg-neutral-900 px-4 py-2 font-medium text-white disabled:opacity-60 dark:bg-neutral-100 dark:text-neutral-900"
+      >
         {submitting ? 'Please wait…' : submitLabel}
       </button>
     </form>

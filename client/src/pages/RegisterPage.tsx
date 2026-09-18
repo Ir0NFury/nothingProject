@@ -10,11 +10,11 @@ export function RegisterPage() {
   if (status === 'authed') return <Navigate to={getRedirectTarget(location.state)} replace />
 
   return (
-    <section>
+    <section className="grid gap-4">
       <h1>Create an account</h1>
       <CredentialsForm submitLabel="Register" passwordAutoComplete="new-password" onSubmit={register} />
       <p>
-        Already registered? <Link to="/login" state={location.state}>Log in</Link>
+        Already registered? <Link to="/login" state={location.state} className="underline underline-offset-2">Log in</Link>
       </p>
     </section>
   )

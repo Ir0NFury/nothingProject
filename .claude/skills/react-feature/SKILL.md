@@ -45,6 +45,11 @@ Components never call `fetch` directly. They call typed functions in `api/<featu
   - Clear a field's error when the user edits it.
   - Link each error to its input with `aria-invalid` and `aria-describedby`. Show form-level errors with `role="alert"`.
 - **User content:** render it as text. Never use `dangerouslySetInnerHTML`.
+- **Styling:** Tailwind v4 utility classes in the markup. No CSS modules, no styled-components, no `style` props.
+  - `client/src/index.css` holds the `@import 'tailwindcss'`, the `body` colors and the base styles for plain semantic elements (`h1`, `h2`, `dt`, `dd`). Add to it only for elements pages use bare; everything else is utilities.
+  - Every color needs its dark counterpart: `text-red-700 dark:text-red-400`, `border-neutral-300 dark:border-neutral-700`. Dark mode follows the OS setting.
+  - Style state from the markup, not extra props: `aria-[current=page]:font-semibold` on `NavLink`, `aria-[invalid=true]:border-red-600` on inputs.
+  - Page shells are `<section className="grid gap-4">`; forms are `grid gap-4` with `grid gap-1` fields.
 
 ## Tests (Vitest + React Testing Library + user-event)
 - Components: start the file with `// @vitest-environment jsdom`. Pure modules like `api/client.ts` stay in the Node environment.
