@@ -1,4 +1,4 @@
-import { index, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
+import { index, integer, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
 
 export const userRole = pgEnum('user_role', ['user', 'admin'])
 export type Role = (typeof userRole.enumValues)[number]
@@ -34,5 +34,18 @@ export const refreshTokens = pgTable(
   ],
 )
 
+export const categories = pgTable('categories', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  // URL key (/categories/react-theory) and the seed's conflict target.
+  slug: text('slug').notNull().unique(),
+  name: text('name').notNull(),
+  description: text('description').notNull(),
+  // Sort order. Deliberately not unique: swapping two positions would violate
+  // a unique constraint halfway through. Ties are broken by name.
+  position: integer('position').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
 export type UserRow = typeof users.$inferSelect
 export type RefreshTokenRow = typeof refreshTokens.$inferSelect
+export type CategoryRow = typeof categories.$inferSelect
