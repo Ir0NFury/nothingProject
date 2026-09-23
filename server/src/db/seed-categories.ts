@@ -5,7 +5,7 @@ type NewCategory = typeof categories.$inferInsert
 
 const starterCategories: NewCategory[] = [
   { position: 1, slug: 'react-theory', name: 'React theory', description: 'Hooks, rendering, reconciliation, state and effects' },
-  { position: 2, slug: 'js-theory', name: 'JavaScript theory', description: 'Closures, the event loop, prototypes, `this`, async' },
+  { position: 2, slug: 'js-theory', name: 'JavaScript theory', description: 'Closures, the event loop, prototypes, this, async' },
   { position: 3, slug: 'react-coding', name: 'React coding', description: 'Build components and hooks, fix bugs in live code' },
   { position: 4, slug: 'js-coding', name: 'JavaScript coding', description: 'Algorithms and utility functions in plain JS' },
   { position: 5, slug: 'general', name: 'General questions', description: 'Experience, architecture, behavioral questions' },

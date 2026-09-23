@@ -42,8 +42,8 @@ describe('GET /api/categories', () => {
     ])
   })
 
-  it('does not require an Authorization header', async () => {
-    const res = await request(app).get('/api/categories')
+  it('ignores an invalid Authorization header', async () => {
+    const res = await request(app).get('/api/categories').set('Authorization', 'Bearer not-a-real-token')
 
     expect(res.status).toBe(200)
   })

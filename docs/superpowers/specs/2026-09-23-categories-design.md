@@ -1,7 +1,7 @@
 # Categories on the home page: Design Spec
 
 - **Date:** 2026-09-23
-- **Status:** Approved in chat, pending written review
+- **Status:** Implemented
 - **Scope:** the `categories` table, a public read API, and category tiles on the home page
 
 ## 1. Goals
@@ -46,7 +46,7 @@ Decisions:
 | position | slug | name | description |
 |---|---|---|---|
 | 1 | `react-theory` | React theory | Hooks, rendering, reconciliation, state and effects |
-| 2 | `js-theory` | JavaScript theory | Closures, the event loop, prototypes, `this`, async |
+| 2 | `js-theory` | JavaScript theory | Closures, the event loop, prototypes, this, async |
 | 3 | `react-coding` | React coding | Build components and hooks, fix bugs in live code |
 | 4 | `js-coding` | JavaScript coding | Algorithms and utility functions in plain JS |
 | 5 | `general` | General questions | Experience, architecture, behavioral questions |
