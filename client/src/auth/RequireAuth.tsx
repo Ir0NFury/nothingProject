@@ -11,14 +11,14 @@ export function RequireAuth({ roles, children }: Props) {
   const location = useLocation()
 
   if (status === 'loading') {
-    return <p role="status">Loading…</p>
+    return <p role="status" className="text-neutral-500 dark:text-neutral-400">Loading…</p>
   }
   if (status === 'guest' || !user) {
     return <Navigate to="/login" state={{ from: location }} replace />
   }
   if (roles && !roles.includes(user.role)) {
     return (
-      <section>
+      <section className="grid gap-4">
         <h1>Forbidden</h1>
         <p>You don't have access to this page.</p>
       </section>

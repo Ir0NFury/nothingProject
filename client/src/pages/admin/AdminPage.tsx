@@ -24,13 +24,13 @@ export function AdminPage() {
   }, [attempt])
 
   return (
-    <section>
+    <section className="grid gap-4">
       <h1>Admin</h1>
-      {state.status === 'loading' && <p role="status">Checking admin access…</p>}
+      {state.status === 'loading' && <p role="status" className="text-neutral-500 dark:text-neutral-400">Checking admin access…</p>}
       {state.status === 'error' && (
-        <div role="alert">
+        <div role="alert" className="grid justify-items-start gap-2 text-red-700 dark:text-red-400">
           <p>Admin check failed: {state.message}</p>
-          <button type="button" onClick={retry}>Retry</button>
+          <button type="button" onClick={retry} className="rounded-md border border-neutral-300 px-3 py-1.5 hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800">Retry</button>
         </div>
       )}
       {state.status === 'ready' && <p>Server says admin access is {state.data ? 'OK' : 'not OK'}.</p>}
