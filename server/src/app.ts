@@ -3,6 +3,7 @@ import express from 'express'
 import helmet from 'helmet'
 import { adminRouter } from './admin/admin.routes.js'
 import { authRouter } from './auth/auth.routes.js'
+import { categoriesRouter } from './categories/categories.routes.js'
 import { AppError } from './lib/errors.js'
 import { errorHandler } from './middleware/errorHandler.js'
 
@@ -14,16 +15,13 @@ app.use(helmet())
 app.use(express.json())
 app.use(cookieParser())
 
-app.get('/api/hello', (_req, res) => {
-  res.json({ message: 'Hello world from Express!' })
-})
-
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' })
 })
 
 app.use('/api/auth', authRouter)
 app.use('/api/admin', adminRouter)
+app.use('/api/categories', categoriesRouter)
 
 // Any other /api path is a 404 in the standard error format.
 app.use('/api', () => {

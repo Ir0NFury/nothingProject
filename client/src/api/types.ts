@@ -8,3 +8,10 @@ export type User = {
 }
 
 export type AuthResponse = { accessToken: string; user: User }
+
+export type Category = {
+  id: string
+  slug: string
+  name: string
+  description: string
+}
