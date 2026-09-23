@@ -11,7 +11,8 @@
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:seed-admin": "tsx --env-file-if-exists=.env src/db/seed-admin.ts"
+    "db:seed-admin": "tsx --env-file-if-exists=.env src/db/seed-admin.ts",
+    "db:seed-categories": "tsx --env-file-if-exists=.env src/db/seed-categories.ts"
   },
   "dependencies": {
     "cookie-parser": "^1.4.7",
