@@ -15,10 +15,6 @@ app.use(helmet())
 app.use(express.json())
 app.use(cookieParser())
 
-app.get('/api/hello', (_req, res) => {
-  res.json({ message: 'Hello world from Express!' })
-})
-
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' })
 })
